@@ -4,6 +4,8 @@
 
 基于 [xyc667/douyin-auto-reply-assistant](https://github.com/xyc667/douyin-auto-reply-assistant) 改进，采用 MIT 许可证。
 
+![私信工作台：账号、AI 和监听状态，以及预览与发送开关](docs/images/workbench.png)
+
 ## 能做什么
 
 - 桌面工作台：账号状态、AI 连接、私信监听、清晰的发送开关。

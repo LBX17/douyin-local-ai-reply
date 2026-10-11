@@ -106,7 +106,7 @@ class KnowledgeBaseManager:
             if not isinstance(entry, dict):
                 continue
             question = entry.get('question', '').strip()
-            if question and (question in text or text in question):
+            if question and question == text:
                 return entry.get('answer', '')
         return None
 
