@@ -1,0 +1,6 @@
+{
+  "version": "1.0",
+  "knowledge_base": [
+    {"question": "这是一条演示消息", "answer": "这是演示回答，请替换成你自己的规则。"}
+  ]
+}

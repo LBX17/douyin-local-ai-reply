@@ -1,0 +1,10 @@
+{
+  "name": "douyin-local-ai-reply",
+  "version": "0.1.0",
+  "private": true,
+  "description": "JavaScript signing dependency for the Douyin desktop assistant",
+  "license": "MIT",
+  "dependencies": {
+    "jsrsasign": "11.1.5"
+  }
+}

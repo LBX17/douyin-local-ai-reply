@@ -1,0 +1,10 @@
+python-dotenv>=1.0,<2
+requests>=2.32,<3
+PyExecJS==1.5.1
+websocket-client>=1.8,<2
+websockets>=13,<18
+playwright>=1.50,<2
+qrcode>=8,<9
+beautifulsoup4>=4.12,<5
+protobuf>=5.27.1,<6
+pillow>=11,<13
