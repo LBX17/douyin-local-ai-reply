@@ -42,7 +42,8 @@ class PortableAI(unittest.TestCase):
             system = AutoReplySystem(str(path))
             self.assertEqual(system.ai_config.model, 'synthetic-model')
             self.assertEqual(system.ai_config.api_key, '')
-            self.assertTrue(str(system.blacklist.blacklist_file).startswith(folder))
+            self.assertEqual(Path(system.blacklist.blacklist_file).resolve(),
+                             (Path(folder) / 'datas' / 'blacklist.txt').resolve())
             system.executor.shutdown(wait=False)
 
     def test_invalid_and_credential_bearing_urls_are_rejected(self):
