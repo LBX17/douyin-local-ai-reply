@@ -105,8 +105,40 @@ class DesktopUI:
     def build_ai_settings(self, parent):
         self.settings = read_settings()
         self.form = {}
-        box = tk.Frame(parent, bg=C['panel'])
-        box.pack(fill=tk.BOTH, expand=True, padx=20, pady=16)
+        footer = tk.Frame(parent, bg=C['panel'])
+        footer.pack(side=tk.BOTTOM, fill=tk.X, padx=20, pady=(8, 14))
+        content = tk.Frame(parent, bg=C['panel'])
+        content.pack(fill=tk.BOTH, expand=True, padx=20, pady=(16, 0))
+        canvas = tk.Canvas(content, bg=C['panel'], highlightthickness=0)
+        scrollbar = ttk.Scrollbar(content, orient=tk.VERTICAL, command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        box = tk.Frame(canvas, bg=C['panel'])
+        item = canvas.create_window((0, 0), window=box, anchor='nw')
+        box.bind('<Configure>', lambda event: canvas.configure(scrollregion=canvas.bbox('all')))
+        canvas.bind('<Configure>', lambda event: canvas.itemconfigure(item, width=event.width))
+
+        def scroll_form(event):
+            widget = event.widget
+            while widget is not None:
+                if widget is box:
+                    canvas.yview_scroll(-int(event.delta / 120), 'units')
+                    return 'break'
+                widget = getattr(widget, 'master', None)
+        self.root.bind('<MouseWheel>', scroll_form, add='+')
+
+        def reveal_field(event):
+            widget = event.widget
+            top = canvas.canvasy(0)
+            bottom = top + canvas.winfo_height()
+            y = widget.winfo_rooty() - box.winfo_rooty()
+            height = widget.winfo_height()
+            if y < top:
+                canvas.yview_moveto(y / max(1, box.winfo_height()))
+            elif y + height > bottom:
+                canvas.yview_moveto((y + height - canvas.winfo_height()) / max(1, box.winfo_height()))
+
         box.columnconfigure(1, weight=1)
         for row, (name, key) in enumerate([('接口类型', 'AI_PROVIDER'), ('API 根地址', 'AI_BASE_URL'),
                 ('模型名称', 'AI_MODEL'), ('API Key（本机可留空）', 'AI_API_KEY'), ('生成上限 / tokens', 'MAX_TOKENS')]):
@@ -119,26 +151,27 @@ class DesktopUI:
                     self.model_combo = widget
             else:
                 widget = tk.Entry(box, textvariable=value, bg=C['field'], fg=C['text'], insertbackground=C['text'], relief='flat', show='•' if key == 'AI_API_KEY' else '')
-            widget.grid(row=row, column=1, sticky='ew', ipady=6, pady=5)
+            widget.grid(row=row, column=1, sticky='ew', ipady=4, pady=4)
+            widget.bind('<FocusIn>', reveal_field, add='+')
         self.form['AI_PROVIDER'].trace_add('write', self.provider_changed)
         self.label(box, 'Ollama: 127.0.0.1:11434/v1   ·   LM Studio: 127.0.0.1:1234/v1', muted=True, size=9).grid(row=5, column=0, columnspan=2, sticky='w', pady=(4, 10))
         self.label(box, '回复风格与规则').grid(row=6, column=0, sticky='nw', pady=6)
-        self.prompt_text = tk.Text(box, height=4, wrap='word', bg=C['field'], fg=C['text'], insertbackground=C['text'], relief='flat', padx=8, pady=8)
+        self.prompt_text = scrolledtext.ScrolledText(box, height=5, wrap='word', bg=C['field'], fg=C['text'], insertbackground=C['text'], relief='flat', padx=8, pady=8)
         self.prompt_text.insert('1.0', self.settings['SYSTEM_PROMPT'])
         self.prompt_text.grid(row=6, column=1, sticky='nsew', pady=6)
-        box.rowconfigure(6, weight=1)
+        self.prompt_text.bind('<FocusIn>', reveal_field, add='+')
         self.thinking = tk.BooleanVar(value=self.settings['AI_THINKING'] == 'true')
         tk.Checkbutton(box, text='开启模型思考（仅 llama.cpp 扩展）', variable=self.thinking,
             bg=C['panel'], fg=C['text'], selectcolor=C['nav'], activebackground=C['panel'], activeforeground=C['text']).grid(row=7, column=0, columnspan=2, sticky='w', pady=6)
-        actions = tk.Frame(box, bg=C['panel'])
-        actions.grid(row=8, column=0, columnspan=2, sticky='ew', pady=(8, 4))
+        actions = tk.Frame(footer, bg=C['panel'])
+        actions.pack(fill=tk.X)
         self.ai_buttons = []
         for name, callback, primary in [('读取模型列表', self.fetch_models, False), ('保存配置', self.save_ai_settings, False), ('测试 AI 连接', self.test_ai, True)]:
             button = self.button(actions, name, callback, primary)
             button.pack(side=tk.LEFT, padx=(0, 8))
             self.ai_buttons.append(button)
         self.feedback = tk.StringVar(value='云端 AI 会收到私信内容；本机模型无需购买 API。')
-        self.label(box, textvariable=self.feedback, muted=True, size=9, wraplength=620, justify='left').grid(row=9, column=0, columnspan=2, sticky='w', pady=(8, 0))
+        self.label(footer, textvariable=self.feedback, muted=True, size=9, wraplength=620, justify='left').pack(anchor='w', pady=(8, 0))
 
     def provider_changed(self, *_):
         urls = {'ollama': 'http://127.0.0.1:11434/v1', 'lm_studio': 'http://127.0.0.1:1234/v1', 'llama_cpp': 'http://127.0.0.1:8080/v1', 'openai': 'http://127.0.0.1:8080/v1'}
